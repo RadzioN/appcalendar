@@ -1,24 +1,27 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useState } from 'react';
+import Calendar from 'react-calendar';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 
 function App() {
+  const [value, onChange] = useState(new Date());
+
+  const events = [new Date(2022, 3, 2), new Date(2022, 3, 5)]
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container fluid>
+      <Row>
+        <Col>
+          <Calendar onChange={onChange} value={value} tileClassName={({ date, view }) => view === 'month' && events.toLocaleString().includes(date.toLocaleString()) ? 'event' : null}/>
+        </Col>
+        <Col md lg="4" className='eventSide'>
+          <Container fluid className='eventBar'>
+            <h2>Wydarzenia</h2>
+          </Container>
+          <Button variant="light" className='addEvent'>Dodaj</Button>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
