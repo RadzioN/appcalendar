@@ -4,7 +4,7 @@ import { Table, Badge, Card, Form, Button } from 'react-bootstrap';
 import moment from 'moment';
 import 'moment/locale/pl';
 
-function CalendarDays({year, month, selectedDate, setDate, events}) {
+function CalendarDays() {
 
   let today = new Date();
   today.setHours(0,0,0,0);
@@ -84,11 +84,11 @@ function CalendarDays({year, month, selectedDate, setDate, events}) {
   );
 }
 
-function CalendarMonths({monthName, setMonth, setViewMode}) {
+function CalendarMonths() {
   return(
     <div className='monthsList'>
       {monthName.map((row, x) => 
-        <button key={x} onClick={() => {setMonth(x); setViewMode('days')}} className='buttonMonth'>
+        <button key={x} className='buttonMonth'>
           {row}
         </button>
       )}
@@ -96,7 +96,7 @@ function CalendarMonths({monthName, setMonth, setViewMode}) {
   );
 }
 
-function CalendarYears({setYear, setViewMode, year}) {
+function CalendarYears() {
 
   let today = new Date();
   let years = new Array(10);
@@ -109,7 +109,7 @@ function CalendarYears({setYear, setViewMode, year}) {
     <div className='yearView'>
       <div className='yearList'>
         {years.map((row, x) => 
-          <button key={x} onClick={() => {setYear(row); setViewMode('months')}} className={'buttonYear '+ (today.getFullYear() === row ? 'todayDay ' : '')}>
+          <button key={x} className={'buttonYear '+ (today.getFullYear() === row ? 'todayDay ' : '')}>
             {row}
           </button>
         )}
@@ -118,94 +118,35 @@ function CalendarYears({setYear, setViewMode, year}) {
   );
 }
 
-function Calendar({selectedDate, setDate, events}) {
+function Calendar() {
 
   let today = new Date();
-  const [currentMonth, setMonth] = useState(today.getMonth());
-  const [currentYear , setYear] = useState(today.getFullYear());
-  const [startYear , setStartYear] = useState(currentYear - 5);
-  const [viewMode , setViewMode] = useState('days');
-  
 
   let monthName = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
-
-  function next() {
-    if(viewMode === 'years') {
-      setStartYear(startYear + 10);
-    } else {
-      let year = (currentMonth === 11) ? currentYear + 1 : currentYear;
-      let month = (currentMonth + 1) % 12;
-      setYear(year);
-      setMonth(month);
-    }
-  }
-
-  function previous() {
-    if(viewMode === 'years') {
-      setStartYear(startYear - 10);
-    } else {
-      let year = (currentMonth === 0) ? currentYear - 1 : currentYear;
-      let month = (currentMonth === 0) ? 11 : currentMonth - 1;
-      setYear(year);
-      setMonth(month);
-    }
-  }
-
-  function changeView() {
-    if(viewMode === 'days') {
-      setViewMode('months');
-    } else if (viewMode === 'months') {
-      setViewMode('years');
-    } else {
-      setViewMode('days');
-    }
-  }
 
   return(
     <div className='calendar'>
       <div className='calendarActions'>
-        <button onClick={previous} className='buttonPrevNext'>Poprzedni</button>
-        <button onClick={changeView} className='buttonView'><h1>{monthName[currentMonth] + " " + currentYear}</h1></button>
-        <button onClick={next} className='buttonPrevNext'>Następny</button>
+        <button className='buttonPrevNext'>Poprzedni</button>
+        <button className='buttonView'><h1>{monthName[currentMonth] + " " + currentYear}</h1></button>
+        <button className='buttonPrevNext'>Następny</button>
       </div>
       {
       viewMode === 'days' ? 
-        <CalendarDays year={currentYear} month={currentMonth} selectedDate={selectedDate} setDate={setDate} events={events}/>
+        <CalendarDays/>
       : viewMode === 'months' ?
-        <CalendarMonths monthName={monthName} setMonth={setMonth} setViewMode={setViewMode}/>
-      : <CalendarYears setYear={setYear} setViewMode={setViewMode} year={startYear}/>
+        <CalendarMonths/>
+      : <CalendarYears/>
       }
       
     </div>
   );
 }
 
-function EventsList({selectedDate, events, setEvent}) {
-
-  const [event , setEventName] = useState('');
+function EventsList() {
 
   selectedDate.setHours(0,0,0,0);
   moment.locale('pl');
-
-  function addEvent() {
-    if(event === '') {
-      alert("Puste pole");
-    } else {
-      let id = events.map((x, i) => {
-        x.id = i + 1;
-        return x;
-      });
-  
-      setEvent([
-        ...events,
-        {
-          id: id,
-          date: selectedDate,
-          event: event.target.value
-        }
-      ]);
-    }
-  }
 
   return(
     <div className='events-list'>
@@ -216,8 +157,8 @@ function EventsList({selectedDate, events, setEvent}) {
         <Card>
           <Card.Header as="h5">Nowe Wydarzenie</Card.Header>
           <Card.Body>
-            <Form.Control type="event" placeholder="Wprowadź nazwę" onChange={value => setEventName(value)}/>
-            <Button className='add-btn' variant="primary" onClick={addEvent}>
+            <Form.Control type="event" placeholder="Wprowadź nazwę"/>
+            <Button className='add-btn' variant="primary">
               Dodaj
             </Button>
            </Card.Body>
@@ -237,16 +178,10 @@ function EventsList({selectedDate, events, setEvent}) {
 }
 
 function App() {
-  const [selectedDate , setDate] = useState(new Date());
-  const [events , setEvent] = useState([
-    {id: 1, date: new Date(2022, 3, 4), event: "Przypominajka 1"},
-    {id: 2, date: new Date(2022, 3, 20), event: "Przypominajka 2"},
-  ]);
-
-  return (
+return (
     <div className="App">
-      <Calendar selectedDate={selectedDate} setDate={setDate} events={events}/>
-      <EventsList selectedDate={selectedDate} events={events} setEvent={setEvent}/>
+      <Calendar />
+      <EventsList />
     </div>
   );
 }
