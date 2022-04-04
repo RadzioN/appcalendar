@@ -1,15 +1,16 @@
 import './App.css';
 import React, { useState } from 'react';
-import { Table } from 'react-bootstrap';
+import { Table, Badge, Card, Form, Button } from 'react-bootstrap';
+import moment from 'moment';
+import 'moment/locale/pl';
 
-function CalendarDays(props) {
+function CalendarDays({year, month, selectedDate, setDate, events}) {
 
   let today = new Date();
   today.setHours(0,0,0,0);
 
-  const [selectedDate , setDate] = useState(today);
 
-  let firstDay = (new Date(props.year, props.month)).getDay() - 1;
+  let firstDay = (new Date(year, month)).getDay() - 1;
 
   function daysInMonth(iMonth, iYear) {
     return 32 - new Date(iYear, iMonth, 32).getDate();
@@ -24,7 +25,7 @@ function CalendarDays(props) {
     for(let j = 0; j < 7; j++) {
       if(i === 0 && j < firstDay) {
         calendarRows[i][j] = "";
-      } else if(date > daysInMonth(props.month, props.year)) {
+      } else if(date > daysInMonth(month, year)) {
         break;
       } else {
         calendarRows[i][j] = date;
@@ -36,7 +37,7 @@ function CalendarDays(props) {
   let weekDaysShortName = ["Pon", "Wto", "Śro", "Czw", "Pią", "Sob", "Nie"];
 
   function isToday(day) {
-    let date = new Date(props.year, props.month, day);
+    let date = new Date(year, month, day);
     if(date.getTime() === today.getTime()) {
       return true;
     } else {
@@ -45,13 +46,14 @@ function CalendarDays(props) {
   }
 
   function activeDay(day) {
-    let date = new Date(props.year, props.month, day);
+    let date = new Date(year, month, day);
     if(date.getTime() === selectedDate.getTime()) {
       return true;
     } else {
       return false;
     }
   }
+
 
   return(
     <Table bordered>
@@ -66,7 +68,14 @@ function CalendarDays(props) {
         {calendarRows.map((row, x) => 
           <tr key={x}>
             {row.map((row, y) => 
-              <td key={y} className='day'><button className={'dayButton ' + (isToday(row) ? 'todayDay ' : '') + (activeDay(row) ? 'activeDay ' : '') + ( y === 5 || y === 6 ? 'isWeekend ' : '') + ( row === '' ? 'emptyDay' : '' )} onClick={() => setDate(new Date(props.year, props.month, row))}>{row}</button></td> 
+              <td key={y} className='day'>
+                <button className={'dayButton ' + (isToday(row) ? 'todayDay ' : '') + (activeDay(row) ? 'activeDay ' : '') + ( y === 5 || y === 6 ? 'isWeekend ' : '') + ( row === '' ? 'emptyDay ' : '' )} onClick={() => setDate(new Date(year, month, row))}>
+                  {row}
+                  <Badge className={"badge " + (events.filter(e => e.date.getTime() === (new Date(year, month, row).getTime())).length > 0 ? 'isEventDay' : '')}>
+                    {events.filter(e => e.date.getTime() === (new Date(year, month, row).getTime())).length}
+                  </Badge>
+                </button>
+              </td> 
             )}
           </tr>
         )}
@@ -75,10 +84,7 @@ function CalendarDays(props) {
   );
 }
 
-function CalendarMonths({setMonth, setViewMode}) {
-
-  let monthName = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
-
+function CalendarMonths({monthName, setMonth, setViewMode}) {
   return(
     <div className='monthsList'>
       {monthName.map((row, x) => 
@@ -112,17 +118,17 @@ function CalendarYears({setYear, setViewMode, year}) {
   );
 }
 
-function Calendar() {
+function Calendar({selectedDate, setDate, events}) {
 
   let today = new Date();
-
   const [currentMonth, setMonth] = useState(today.getMonth());
   const [currentYear , setYear] = useState(today.getFullYear());
   const [startYear , setStartYear] = useState(currentYear - 5);
   const [viewMode , setViewMode] = useState('days');
+  
 
   let monthName = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
-  
+
   function next() {
     if(viewMode === 'years') {
       setStartYear(startYear + 10);
@@ -156,7 +162,7 @@ function Calendar() {
   }
 
   return(
-    <div>
+    <div className='calendar'>
       <div className='calendarActions'>
         <button onClick={previous} className='buttonPrevNext'>Poprzedni</button>
         <button onClick={changeView} className='buttonView'><h1>{monthName[currentMonth] + " " + currentYear}</h1></button>
@@ -164,9 +170,9 @@ function Calendar() {
       </div>
       {
       viewMode === 'days' ? 
-        <CalendarDays year={currentYear} month={currentMonth}/>
+        <CalendarDays year={currentYear} month={currentMonth} selectedDate={selectedDate} setDate={setDate} events={events}/>
       : viewMode === 'months' ?
-        <CalendarMonths setMonth={setMonth} setViewMode={setViewMode}/>
+        <CalendarMonths monthName={monthName} setMonth={setMonth} setViewMode={setViewMode}/>
       : <CalendarYears setYear={setYear} setViewMode={setViewMode} year={startYear}/>
       }
       
@@ -174,10 +180,73 @@ function Calendar() {
   );
 }
 
+function EventsList({selectedDate, events, setEvent}) {
+
+  const [event , setEventName] = useState('');
+
+  selectedDate.setHours(0,0,0,0);
+  moment.locale('pl');
+
+  function addEvent() {
+    if(event === '') {
+      alert("Puste pole");
+    } else {
+      let id = events.map((x, i) => {
+        x.id = i + 1;
+        return x;
+      });
+  
+      setEvent([
+        ...events,
+        {
+          id: id,
+          date: selectedDate,
+          event: event.target.value
+        }
+      ]);
+    }
+  }
+
+  return(
+    <div className='events-list'>
+      <div className='events-head'>
+        <h1>Wydarzenia</h1>
+      </div>
+      <div className='list'>
+        <Card>
+          <Card.Header as="h5">Nowe Wydarzenie</Card.Header>
+          <Card.Body>
+            <Form.Control type="event" placeholder="Wprowadź nazwę" onChange={value => setEventName(value)}/>
+            <Button className='add-btn' variant="primary" onClick={addEvent}>
+              Dodaj
+            </Button>
+           </Card.Body>
+        </Card>
+        <hr/>
+        {events.filter(e => e.date.getTime() === selectedDate.getTime()).map((row, x) => 
+          <Card key={x}>
+            <Card.Header as="h5">{moment(row.date).format('LL')}</Card.Header>
+            <Card.Body>
+              <Card.Title>{row.event}</Card.Title>
+            </Card.Body>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [selectedDate , setDate] = useState(new Date());
+  const [events , setEvent] = useState([
+    {id: 1, date: new Date(2022, 3, 4), event: "Przypominajka 1"},
+    {id: 2, date: new Date(2022, 3, 20), event: "Przypominajka 2"},
+  ]);
+
   return (
     <div className="App">
-      <Calendar />
+      <Calendar selectedDate={selectedDate} setDate={setDate} events={events}/>
+      <EventsList selectedDate={selectedDate} events={events} setEvent={setEvent}/>
     </div>
   );
 }
